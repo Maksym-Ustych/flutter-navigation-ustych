@@ -1,281 +1,158 @@
-Практична робота 7 — Роутинг і навігація у Flutter
+# Практична робота 7 — Роутинг і навігація у Flutter
 
-Студент: Устич Максим
-Група: alk-43
-Спеціальність: 121 Інженерія програмного забезпечення
-Варіант: 1 — Бібліотека коледжу
+**Студент:** Устич Максим  
+**Група:** alk-43  
+**Спеціальність:** 121 Інженерія програмного забезпечення  
+**Варіант:** 1 — Бібліотека коледжу
 
-Опис проєкту
+## Опис проєкту
 
 Flutter-застосунок для перегляду каталогу та бронювання книг бібліотеки коледжу.
 
-Навігація реалізована за допомогою go_router 17.x.
+Навігація реалізована за допомогою `go_router` 17.x.
 
-У застосунку реалізовано:
+### Реалізовано
 
-каталог із 15 книгами;
+- каталог із 15 книгами;
+- фільтрацію книг за жанром;
+- три вкладки: «Каталог», «Мої книги», «Профіль»;
+- `StatefulShellRoute.indexedStack`;
+- параметри шляху та параметри запиту;
+- захищений маршрут бронювання;
+- автоматичне повернення після входу;
+- вибір дати повернення книги;
+- повернення результату через `push/pop`;
+- `PopScope`;
+- `errorBuilder`;
+- deep link для Android та iOS.
 
-фільтрацію книг за жанром;
+## Карта маршрутів
 
-три вкладки: «Каталог», «Мої книги», «Профіль»;
+| Маршрут | Екран | Захист |
+|---|---|---|
+| `/catalog` | `CatalogScreen` | — |
+| `/catalog?genre=...` | `CatalogScreen` | — |
+| `/catalog/book/:bookId` | `BookScreen` | — |
+| `/catalog/book/:bookId/reserve` | `ReserveScreen` | Потрібен вхід |
+| `/my-books` | `MyBooksScreen` | — |
+| `/profile` | `ProfileScreen` | — |
+| `/login?from=...` | `LoginScreen` | — |
+| `/return-date` | `DatePickerScreen` | — |
 
-збереження стану вкладок через StatefulShellRoute.indexedStack;
+## Нижня навігація
 
-параметри шляху та параметри запиту;
+Використано `StatefulShellRoute.indexedStack` із трьома вкладками:
 
-захищений маршрут бронювання;
+1. Каталог
+2. Мої книги
+3. Профіль
 
-автоматичне повернення після входу;
+Стан кожної вкладки зберігається при перемиканні.
 
-вибір дати повернення книги;
+## Guard та redirect
 
-повернення результату через push/pop;
+Бронювання книги доступне лише після входу.
 
-PopScope для незбережених змін;
+Якщо гість намагається відкрити маршрут:
 
-errorBuilder для невідомих маршрутів;
+`/catalog/book/:bookId/reserve`
 
-deep link для Android та iOS.
+він перенаправляється на:
 
-Карта маршрутів
+`/login?from=...`
 
-Маршрут
+Після входу користувач автоматично повертається до сторінки бронювання.
 
-Екран
-
-Захист
-
-/catalog
-
-CatalogScreen
-
-—
-
-/catalog?genre=...
-
-CatalogScreen
-
-—
-
-/catalog/book/:bookId
-
-BookScreen
-
-—
-
-/catalog/book/:bookId/reserve
-
-ReserveScreen
-
-Потрібен вхід
-
-/my-books
-
-MyBooksScreen
-
-—
-
-/profile
-
-ProfileScreen
-
-—
-
-/login?from=...
-
-LoginScreen
-
-—
-
-/return-date
-
-DatePickerScreen
-
-—
-
-Нижня навігація
-
-Для основної навігації використано StatefulShellRoute.indexedStack.
-
-Вкладки:
-
-Каталог
-
-Мої книги
-
-Профіль
-
-Кожна вкладка має власний навігаційний стек. Стан вкладки зберігається при перемиканні.
-
-Guard та redirect
-
-Маршрут бронювання:
-
-/catalog/book/:bookId/reserve
-
-доступний лише користувачу, який увійшов.
-
-Якщо гість намагається відкрити бронювання, застосунок перенаправляє його на:
-
-/login?from=...
-
-Після успішного входу користувач автоматично повертається до сторінки бронювання.
-
-Для оновлення маршрутизації використано refreshListenable.
-
-Повернення результату
+## Повернення результату
 
 Екран вибору дати відкривається через:
 
+```dart
 context.push<DateTime>('/return-date');
+```
 
 Обрана дата повертається через:
 
+```dart
 context.pop(selectedDate);
+```
 
-Після повернення дата відображається на екрані бронювання.
+## PopScope
 
-PopScope
+На екрані бронювання використано `PopScope`.
 
-На екрані бронювання використано PopScope.
+Якщо користувач вибрав дату, але не завершив бронювання, при виході з'являється підтвердження.
 
-Якщо користувач вибрав дату повернення, але ще не підтвердив бронювання, при спробі вийти з екрана з'являється діалог підтвердження.
+## Deep link
 
-Deep link
+Використовується схема:
 
-Для застосунку використовується власна схема:
-
+```text
 library://app/catalog/book/<id>
+```
 
 Приклад:
 
+```text
 library://app/catalog/book/1
+```
 
-Ця адреса відкриває сторінку книги Clean Code.
+Цей deep link відкриває книгу **Clean Code**.
 
-Перевірка на Android
+### Перевірка на Android
 
+```powershell
 & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" shell am start -a android.intent.action.VIEW -c android.intent.category.BROWSABLE -d "library://app/catalog/book/1"
+```
 
-Перевірка на iOS Simulator
+Deep link налаштовано у:
 
-xcrun simctl openurl booted "library://app/catalog/book/1"
+- `android/app/src/main/AndroidManifest.xml`
+- `ios/Runner/Info.plist`
 
-Deep link налаштовано у файлах:
+## Запуск проєкту
 
-android/app/src/main/AndroidManifest.xml
-
-ios/Runner/Info.plist
-
-Перевірка deep link фактично виконувалась на Android-емуляторі.
-
-Обробка помилок
-
-Для невідомої адреси використано errorBuilder.
-
-Користувач бачить повідомлення про те, що сторінку не знайдено, та кнопку повернення до каталогу.
-
-Структура проєкту
-
-lib/
-├── models/
-│   └── book.dart
-├── screens/
-│   ├── book_screen.dart
-│   ├── catalog_screen.dart
-│   ├── date_picker_screen.dart
-│   ├── error_screen.dart
-│   ├── login_screen.dart
-│   ├── my_books_screen.dart
-│   ├── profile_screen.dart
-│   ├── reserve_screen.dart
-│   └── shell_screen.dart
-├── app_state.dart
-├── router.dart
-└── main.dart
-
-Запуск проєкту
-
-Завантажити залежності:
-
+```bash
 flutter pub get
-
-Перевірити код:
-
 flutter analyze
-
-Запустити тести:
-
 flutter test
-
-Запустити у Chrome:
-
 flutter run -d chrome
+```
 
-Запустити на Android-емуляторі:
+## Скріншоти
 
-flutter run -d emulator-5554
+### Збереження стану вкладки
 
-Скріншоти
+![Збереження стану вкладки](docs/01_tab_state.jpg)
 
-Збереження стану вкладки
+### Повернення після входу
 
-Відкрита книга залишається на місці після переходу у вкладку «Профіль» і повернення до «Каталогу».
+![Повернення після входу](docs/02_login_redirect.jpg)
 
+### Deep link
 
+![Deep link](docs/03_deep_link.jpg)
 
-Повернення після входу
+## Труднощі та їх розв'язання
 
-При спробі бронювання без входу користувач переходить на сторінку входу. Після входу застосунок автоматично повертає його до бронювання.
+### Повернення після входу
 
+Спочатку після авторизації користувач не повертався до захищеного маршруту. Проблему вирішено передаванням адреси через query-параметр `from`.
 
+### ADB у Windows
 
-Deep link
+Команда `adb` не була доступна через `PATH`, тому для перевірки deep link використано повний шлях до `adb.exe`.
 
-Deep link library://app/catalog/book/1 відкриває книгу Clean Code.
+## Використані технології
 
-
-
-Труднощі та їх розв'язання
-
-Повернення після авторизації
-
-Спочатку після натискання кнопки входу користувач не повертався до захищеного маршруту.
-
-Проблему вирішено передаванням початкової адреси через query-параметр from. Після входу виконується перехід на збережену адресу.
-
-ADB у Windows
-
-Команда adb не розпізнавалась у PowerShell, оскільки Android Platform Tools не були додані до PATH.
-
-Для перевірки deep link використано повний шлях до adb.exe.
-
-Deep link
-
-Для підтримки власної схеми library:// окремо налаштовано Android та iOS.
-
-Використані технології
-
-Flutter
-
-Dart
-
-go_router 17.x
-
-GoRouter
-
-StatefulShellRoute
-
-StatefulShellBranch
-
-redirect
-
-refreshListenable
-
-ChangeNotifier
-
-PopScope
-
-Deep Linking
-
-Git
+- Flutter
+- Dart
+- `go_router` 17.x
+- `GoRouter`
+- `StatefulShellRoute`
+- `redirect`
+- `refreshListenable`
+- `ChangeNotifier`
+- `PopScope`
+- Deep Linking
+- Git
